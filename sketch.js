@@ -13,7 +13,7 @@ function heuristic(a, b){
   //TODO: Change this. We are getting corner paths everytime
   //TODO: Where on the page is canvas displayed
   // TODO: Change where the input text is placed
-  return abs(b.i-a.i) + abs(b.j-a.j) // Manhattan distance
+  // return dist(a.i,a.j, b.i,b.j) // Manhattan distance
 }
 
 function Spot(i, j){
@@ -25,23 +25,27 @@ function Spot(i, j){
   this.neighbors = []
   this.previous = undefined
   this.wall = false
-  if(random() < 0.2){
+  if(random() < 0.3){
   	this.wall = true
   }
   
   this.addNeightbors = function(){
-    if(i<cols-1){      this.neighbors.push(grid[this.i+1][j])
+    if(i<cols-1){      this.neighbors.push(grid[i+1][j])
                 }
     if(j<rows-1){
-    this.neighbors.push(grid[this.i][j+1])
+    this.neighbors.push(grid[i][j+1])
     }
     if(i>0){
-  this.neighbors.push(grid[this.i-1][j])
+  this.neighbors.push(grid[i-1][j])
     }
     if(j>0){
-    this.neighbors.push(grid[this.i][j-1])
+    this.neighbors.push(grid[i][j-1])
     }
-  
+    //Diagonal neighbors
+    if(i>0 && j>0) this.neighbors.push(grid[i-1][j-1])
+    if(i>0 && j<rows-1) this.neighbors.push(grid[i-1][j+1])
+    if(i<cols-1 && j>0) this.neighbors.push(grid[i+1][j-1])
+    if(i<cols-1 && j<rows-1) this.neighbors.push(grid[i+1][j+1])
   }
 
   this.show = function(color){
@@ -89,6 +93,7 @@ function setup() {
 }
 
 function drawGrid(){
+  createCanvas(400, 400);
   noLoop()
   openSet = []
   closedSet = []
@@ -158,8 +163,14 @@ function draw() {
     
     closedSet.push(current)
     openSet.splice(shortestPathNode, 1)
+    //Search for the next spot to explore
     for (var idx in current.neighbors){
       nbr = current.neighbors[idx]
+      //vertical or horizontal step
+      var step = 1
+      //diagonal step
+      if(abs(nbr.i - current.i)+abs(nbr.j - current.j) == 2) step = sqrt(2)
+      
       if(nbr.wall)
       	continue
       if (closedSet.indexOf(nbr) != -1){
@@ -168,12 +179,13 @@ function draw() {
       if(openSet.indexOf(nbr) != -1 &&  nbr.g < current.g + 1){
         continue}
       if(openSet.indexOf(nbr) != -1 &&  nbr.g >= current.g + 1){
-        nbr.g = current.g + 1
-        nbr.previous = current 
+        nbr.g = current.g + step
+        nbr.previous = current
+        continue
       }
       
       openSet.push(nbr)
-      nbr.g = current.g + 1
+      nbr.g = current.g + step
       nbr.h = heuristic(nbr, end)
       nbr.f = nbr.g + nbr.h
       nbr.previous = current 
@@ -198,10 +210,10 @@ function draw() {
     closedSet[k].show(color(255,0,0))
   }
   
-  print('Open set is this big',openSet.length)
-  for(k=0; k < openSet.length; k++){
-    openSet[k].show(color(0,255,0))
-  }
+  // print('Open set is this big',openSet.length)
+  // for(k=0; k < openSet.length; k++){
+  //   openSet[k].show(color(0,255,0))
+  // }
       
   if(path){
     for(var t=0; t< path.length; t++){
