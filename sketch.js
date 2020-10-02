@@ -1,18 +1,16 @@
-// part 2 : https://youtu.be/EaZxUCWAjb0 -- adding obstacles
-//right now, its going out of memory
-cols = 6
-rows = 6
+cols = 6 //default number of columns
+rows = 6 //default number of rows
 var openSet = []
 var closedSet = []
 var w,h
 var start, end
-var grid = new Array(cols)
+var input1,input2
+var grid
 stop = true
 
 function heuristic(a, b){
   //return dist(a.i, a.j, b.i, b.j)  // Euclidean distance -- not useful since we can only walk horizontally and vertically
   //TODO: Change this. We are getting corner paths everytime
-  //TODO: Include obstacles
   //TODO: Where on the page is canvas displayed
   // TODO: Change where the input text is placed
   return abs(b.i-a.i) + abs(b.j-a.j) // Manhattan distance
@@ -26,6 +24,10 @@ function Spot(i, j){
   this.h  = 0
   this.neighbors = []
   this.previous = undefined
+  this.wall = false
+  if(random() < 0.2){
+  	this.wall = true
+  }
   
   this.addNeightbors = function(){
     if(i<cols-1){      this.neighbors.push(grid[this.i+1][j])
@@ -44,6 +46,9 @@ function Spot(i, j){
 
   this.show = function(color){
     fill(color)
+    if(this.wall){
+    	fill(255, 255, 255)
+    }
     stroke(0)
     rect(this.i*(w-1), this.j*(h-1), w-1, h-1)
   }
@@ -63,23 +68,23 @@ function setup() {
   createCanvas(400, 400);
   noLoop()
 
-  input = createInput('Enter width here..');
-  input.position(0, height + 100);
+  input1 = createInput('Enter number of columns here..');
+  input1.position(0, height + 100);
 
-  input = createInput('Enter height here..');
-  input.position(0, height + 130);
+  input2 = createInput('Enter number of rows here..');
+  input2.position(0, height + 130);
 
-  button = createButton('Submit Values');
-  button.position(0,height + 160);
-  button.mousePressed(drawGrid);
+  button1 = createButton('Submit Values');
+  button1.position(0,height + 160);
+  button1.mousePressed(drawGrid);
 
-  button = createButton('Resume/Start');
-  button.position(0,height + 190);
-  button.mousePressed(start_drawing);
+  button2 = createButton('Resume/Start');
+  button2.position(0,height + 190);
+  button2.mousePressed(start_drawing);
 
-  button = createButton('Pause');
-  button.position(0,height+220);
-  button.mousePressed(pause_drawing);
+  button3 = createButton('Pause');
+  button3.position(0,height+220);
+  button3.mousePressed(pause_drawing);
   
 }
 
@@ -87,8 +92,11 @@ function drawGrid(){
   noLoop()
   openSet = []
   closedSet = []
+  cols = input1.value()
+  rows = input2.value()
   w  = width / cols
   h = height / rows
+  grid = new Array(cols)
   for(var i=0 ;i < cols; i++){
     grid[i] = new Array(rows)
   }
@@ -107,6 +115,8 @@ function drawGrid(){
   
   start = grid[0][0]
   end = grid[cols-1][rows-1]
+  start.wall = false
+  end.wall = false
   
   openSet.push(start)
 
@@ -150,6 +160,8 @@ function draw() {
     openSet.splice(shortestPathNode, 1)
     for (var idx in current.neighbors){
       nbr = current.neighbors[idx]
+      if(nbr.wall)
+      	continue
       if (closedSet.indexOf(nbr) != -1){
         continue
       }
@@ -170,6 +182,7 @@ function draw() {
     
   } else {
     //Stop and exit!
+    console.log('No path exists!')
     noLoop()
     stop = true
   }
